@@ -1,0 +1,1 @@
+# The created cloud infrastructure
