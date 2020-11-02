@@ -9,7 +9,14 @@ all: ./infrastructure/build/lambda.json
 		&& cmake3 .. -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF
 		&& make && make install
 
-./build/sqs-persist.zip: ./CMakeLists.txt ${SRC} /usr/local/include/aws/lambda-runtime
+/usr/local/include/aws/sqs /usr/local/include/aws/dynamodb:
+	git submodule update --init
+	cd ./dependencies/aws-sdk-cpp \
+		&& mkdir -p build && cd build \
+		&& cmake3 .. -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DBUILD_ONLY="sqs;dynamodb" -DCPP_STANDARD=17 \
+		&& make && make install
+
+./build/sqs-persist.zip: ./CMakeLists.txt ${SRC} /usr/local/include/aws/lambda-runtime /usr/local/include/aws/sqs
 	mkdir -p build && cd build \
 		&& cmake .. \
 		&& make aws-lambda-package-sqs-persist
