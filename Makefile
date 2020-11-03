@@ -5,20 +5,19 @@ all: ./infrastructure/build/lambda.json
 ./dependencies/aws-lambda-cpp ./dependencies/aws-sdk-cpp: .gitmodules
 	git submodule update --init 
 
-/usr/local/include/aws/lambda-runtime: ./dependencies/aws-lambda-cpp
+/usr/local/include/aws/lambda-runtime: | ./dependencies/aws-lambda-cpp
 	cd ./dependencies/aws-lambda-cpp \
 		&& mkdir -p build && cd build \
 		&& cmake3 .. -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF \
 		&& make && sudo make install
 
-/usr/local/include/aws/sqs /usr/local/include/aws/dynamodb: ./dependencies/aws-sdk-cpp
-	git submodule update --init
+/usr/local/include/aws/sqs /usr/local/include/aws/dynamodb: | ./dependencies/aws-sdk-cpp
 	cd ./dependencies/aws-sdk-cpp \
 		&& mkdir -p build && cd build \
 		&& cmake3 .. -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DBUILD_ONLY="sqs;dynamodb" -DCPP_STANDARD=17 \
 		&& make && sudo make install
 
-./build/sqs-persist.zip: ./CMakeLists.txt ${SRC} /usr/local/include/aws/lambda-runtime /usr/local/include/aws/sqs
+./build/sqs-persist.zip: ./CMakeLists.txt ${SRC} | /usr/local/include/aws/lambda-runtime /usr/local/include/aws/sqs
 	mkdir -p build && cd build \
 		&& cmake3 .. \
 		&& make aws-lambda-package-sqs-persist
@@ -73,3 +72,4 @@ clean:
 
 .PHONY: build run clean
 
+-include container.mk
