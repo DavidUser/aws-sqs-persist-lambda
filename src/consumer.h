@@ -23,22 +23,23 @@ std::string GetEnvironmentVariable(const char* name) {
   return value;
 }
 
+void ConsumeMessage(const Message& message) {
+  using namespace SimpleAWS;
+  Aws::Client::ClientConfiguration config;
+
+  DynamoDB db(config);
+  const auto TABLE_NAME = GetEnvironmentVariable("TABLE_NAME");
+  db.insert(TABLE_NAME,
+            {{"Id", message.GetMessageId()}, {"Value", message.GetBody()}});
+}
+
 void ConsumeMessage() {
-  Aws::SDKOptions options;
-  SimpleAws::Api api(options);
-  {
-    using namespace SimpleAWS;
-    Aws::Client::ClientConfiguration config;
+  using namespace SimpleAWS;
+  Aws::Client::ClientConfiguration config;
 
-    const auto QUEUE_URL = GetEnvironmentVariable("QUEUE_URL");
-    Sqs sqs(config, QUEUE_URL);
-    auto message = sqs.ReceiveMessage();
-
-    DynamoDB db(config);
-    const auto TABLE_NAME = GetEnvironmentVariable("TABLE_NAME");
-    db.insert(TABLE_NAME,
-              {{"Id", message.GetMessageId()}, {"Value", message.GetBody()}});
-
-    sqs.DeleteMessage(message);
-  }
+  const auto QUEUE_URL = GetEnvironmentVariable("QUEUE_URL");
+  Sqs sqs(config, QUEUE_URL);
+  auto message = sqs.ReceiveMessage();
+  ConsumeMessage(message);
+  sqs.DeleteMessage(message);
 }

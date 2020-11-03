@@ -1,13 +1,31 @@
+#include <aws/core/utils/json/JsonSerializer.h>
 #include <aws/lambda-runtime/runtime.h>
 
 #include <exception>
 
 #include "consumer.h"
+#include "sqs.h"
 
 using namespace aws::lambda_runtime;
 
 invocation_response my_handler(invocation_request const& request) try {
-  ConsumeMessage();
+  Aws::SDKOptions options;
+  SimpleAws::Api api(options);
+  {
+    Aws::Utils::Json::JsonValue payload = request.payload;
+    Aws::Utils::Json::JsonView payloadView = payload.View();
+
+    if (payload.WasParseSuccessful() && payloadView.KeyExists("messageId")) {
+      Message message;
+      message.SetMessageId(payloadView.GetString("messageId"));
+      message.SetBody(payloadView.GetString("body"));
+
+      ConsumeMessage(message);
+    } else {
+      ConsumeMessage();
+    }
+  }
+
   return invocation_response::success("Done!", "application/json");
 } catch (std::exception& error) {
   return invocation_response::failure(error.what(), "application/json");
