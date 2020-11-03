@@ -73,4 +73,3 @@ clean:
 
 .PHONY: build run clean
 
-include container.mk
