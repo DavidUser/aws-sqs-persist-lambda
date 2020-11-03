@@ -24,6 +24,7 @@ std::string GetEnvironmentVariable(const char* name) {
 }
 
 void ConsumeMessage(const Message& message) {
+  std::cout << "Processing: " << message << std::endl;
   using namespace SimpleAWS;
   Aws::Client::ClientConfiguration config;
 
@@ -40,6 +41,7 @@ void ConsumeMessage() {
   const auto QUEUE_URL = GetEnvironmentVariable("QUEUE_URL");
   Sqs sqs(config, QUEUE_URL);
   auto message = sqs.ReceiveMessage();
+  std::cout << message.GetBody() << std::endl;
   ConsumeMessage(message);
   sqs.DeleteMessage(message);
 }
